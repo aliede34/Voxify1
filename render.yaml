@@ -11,6 +11,7 @@ services:
         fromDatabase:
           name: voxify-db
           property: connectionString
+    runtime: python-3.11
 
 databases:
   - name: voxify-db

@@ -2,6 +2,8 @@
 
 Voxify is a Discord-like chat application built with Python Flask that includes voice chat and voice channel functionality.
 
+**Note: Requires Python 3.11 or earlier due to gevent compatibility requirements.**
+
 ## Features
 
 - User authentication system with registration and login
