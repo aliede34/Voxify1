@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}{{ server.name }} - Voxify{% endblock %}
+
+{% block content %}
+<!-- Server Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Server Sidebar -->
+    <div class="lg:col-span-1 bg-darker rounded-xl shadow-lg p-4 border border-gray-800 h-fit">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+            <h2 class="text-lg font-bold text-lightest truncate">{{ server.name }}</h2>
+            <div class="dropdown relative">
+                <button 
+                    class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-light transition-colors duration-200"
+                    type="button" 
+                    id="serverDropdown" 
+                    data-bs-toggle="dropdown"
+                >
+                    <i class="fas fa-cog text-sm"></i>
+                </button>
+                <ul class="dropdown-menu absolute right-0 mt-1 w-48 bg-dark border border-gray-700 rounded-lg shadow-lg py-2 z-10 hidden" aria-labelledby="serverDropdown">
+                    <li><a class="block px-4 py-2 text-sm text-lightest hover:bg-gray-700" href="#">Server Settings</a></li>
+                    <li><a class="block px-4 py-2 text-sm text-lightest hover:bg-gray-700" href="#">Invite People</a></li>
+                    <li><hr class="border-gray-700 my-1"></li>
+                    <li><a class="block px-4 py-2 text-sm text-lightest hover:bg-gray-700" href="#">Leave Server</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs uppercase text-gray-400 tracking-wider">Text Channels</span>
+                <button 
+                    class="w-6 h-6 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-light transition-colors duration-200"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#createChannelModal"
+                >
+                    <i class="fas fa-plus text-xs"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-1">
+                {% for channel in channels %}
+                    {% if channel.type == 'text' %}
+                        <a 
+                            href="{{ url_for('channel', channel_id=channel.id) }}" 
+                            class="flex items-center px-2 py-1.5 rounded text-lightest hover:bg-gray-700 transition-colors duration-200"
+                        >
+                            <i class="fas fa-hashtag text-gray-400 mr-1.5 text-sm"></i>
+                            <span class="text-sm truncate">{{ channel.name }}</span>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div class="flex items-center justify-between mt-4 mb-2">
+                <span class="text-xs uppercase text-gray-400 tracking-wider">Voice Channels</span>
+                <button class="w-6 h-6 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-light transition-colors duration-200">
+                    <i class="fas fa-plus text-xs"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-1">
+                {% for channel in channels %}
+                    {% if channel.type == 'voice' %}
+                        <div class="flex items-center px-2 py-1.5 rounded text-lightest hover:bg-gray-700 transition-colors duration-200">
+                            <i class="fas fa-volume-up text-gray-400 mr-1.5 text-sm"></i>
+                            <span class="text-sm truncate">{{ channel.name }}</span>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="lg:col-span-3">
+        <div class="bg-darker rounded-xl shadow-lg p-12 border border-gray-800 flex flex-col items-center justify-center text-center">
+            <i class="fas fa-server text-6xl text-gray-500 mb-4"></i>
+            <h3 class="text-2xl font-bold text-lightest mb-2">Welcome to {{ server.name }}!</h3>
+            <p class="text-gray-400 mb-1">Select a channel to start chatting</p>
+            <p class="text-gray-500 text-sm">This server has {{ channels|length }} channels</p>
+        </div>
+    </div>
+</div>
+
+<!-- Create Channel Modal -->
+<div class="modal fade" id="createChannelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-gray-700">
+                <h5 class="modal-title">Create Channel</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('create_channel', server_id=server.id) }}">
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label for="channelName" class="block text-sm font-medium text-gray-400 mb-2">Channel Name</label>
+                        <input 
+                            type="text" 
+                            class="w-full px-4 py-2 bg-dark border border-gray-700 rounded-lg text-lightest focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
+                            id="channelName" 
+                            name="name" 
+                            required
+                        >
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Channel Type</label>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input 
+                                    class="form-check-input h-4 w-4 text-primary bg-dark border-gray-700 rounded focus:ring-primary mr-3" 
+                                    type="radio" 
+                                    name="type" 
+                                    id="textChannel" 
+                                    value="text" 
+                                    checked
+                                >
+                                <label class="form-check-label text-lightest" for="textChannel">
+                                    <i class="fas fa-hashtag mr-2 text-gray-400"></i>Text Channel
+                                </label>
+                            </div>
+                            <div class="flex items-center">
+                                <input 
+                                    class="form-check-input h-4 w-4 text-primary bg-dark border-gray-700 rounded focus:ring-primary mr-3" 
+                                    type="radio" 
+                                    name="type" 
+                                    id="voiceChannel" 
+                                    value="voice"
+                                >
+                                <label class="form-check-label text-lightest" for="voiceChannel">
+                                    <i class="fas fa-volume-up mr-2 text-gray-400"></i>Voice Channel
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-gray-700">
+                    <button 
+                        type="button" 
+                        class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-lightest rounded-lg font-medium transition-colors duration-200 mr-2" 
+                        data-bs-dismiss="modal"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="px-4 py-2 bg-primary hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors duration-200"
+                    >
+                        Create Channel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

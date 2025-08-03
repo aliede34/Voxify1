@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Direct Message - {{ recipient.username }} - Voxify{% endblock %}
+
+{% block content %}
+<!-- DM Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-120px)]">
+    <!-- Friends Sidebar -->
+    <div class="lg:col-span-1 bg-darker rounded-xl shadow-lg p-4 border border-gray-800 overflow-y-auto">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+            <h2 class="text-lg font-bold text-lightest">Direct Messages</h2>
+            <button 
+                class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-light transition-colors duration-200"
+            >
+                <i class="fas fa-plus text-sm"></i>
+            </button>
+        </div>
+        
+        <div class="mt-4">
+            <!-- Friends list would go here -->
+            <div class="space-y-1">
+                <div class="flex items-center px-2 py-1.5 rounded bg-gray-700 text-lightest">
+                    <i class="fas fa-user text-gray-400 mr-1.5 text-sm"></i>
+                    <span class="text-sm">{{ recipient.username }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chat Area -->
+    <div class="lg:col-span-3 flex flex-col bg-darker rounded-xl shadow-lg border border-gray-800 overflow-hidden">
+        <!-- DM Header -->
+        <div class="border-b border-gray-800 p-4">
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-user text-lightest"></i>
+                </div>
+                <h2 class="text-lg font-bold text-lightest">{{ recipient.username }}</h2>
+                <div class="ml-auto flex space-x-2">
+                    <button class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-light transition-colors duration-200">
+                        <i class="fas fa-phone text-sm"></i>
+                    </button>
+                    <button class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-light transition-colors duration-200">
+                        <i class="fas fa-video text-sm"></i>
+                    </button>
+                    <button class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-light transition-colors duration-200">
+                        <i class="fas fa-info-circle text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Message List -->
+        <div class="flex-1 overflow-y-auto p-4" id="messageList">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message mb-4">
+                        <div class="flex">
+                            <div class="mr-4 flex-shrink-0">
+                                <div class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
+                                    <i class="fas fa-user text-lightest"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-baseline">
+                                    <strong class="text-lightest mr-2">{{ message.sender.username if message.sender_id == session.user_id else recipient.username }}</strong>
+                                    <small class="text-gray-400 text-xs">{{ message.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                <div class="mt-1 text-lightest">{{ message.content }}</div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                    <i class="fas fa-comments text-4xl mb-4"></i>
+                    <h3 class="text-xl font-bold text-lightest mb-2">No messages yet</h3>
+                    <p class="text-gray-400">Start a conversation with {{ recipient.username }}</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Message Input -->
+        <div class="border-t border-gray-800 p-4">
+            <form method="POST" action="{{ url_for('send_direct_message', user_id=recipient.id) }}">
+                <div class="flex items-center mb-2">
+                    <input 
+                        type="text" 
+                        name="content"
+                        class="flex-1 px-4 py-3 bg-dark border border-gray-700 rounded-lg text-lightest focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
+                        placeholder="Message @{{ recipient.username }}"
+                    >
+                    <button 
+                        type="submit"
+                        class="ml-2 w-10 h-10 rounded-full bg-primary hover:bg-indigo-600 flex items-center justify-center text-white transition-colors duration-200"
+                    >
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="flex">
+                <button class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-light transition-colors duration-200 mr-2">
+                    <i class="fas fa-plus text-sm"></i>
+                </button>
+                <button class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-light transition-colors duration-200">
+                    <i class="fas fa-gift text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
