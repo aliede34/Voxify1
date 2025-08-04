@@ -52,25 +52,76 @@ def create_app():
             # Check if fs_uniquifier column exists
             columns = [column['name'] for column in inspector.get_columns('users')]
             if 'fs_uniquifier' not in columns:
-                # Add fs_uniquifier column for existing databases
+                # For SQLite, we need to recreate the table with the new column
+                # since it doesn't support adding UNIQUE columns to existing tables
                 import uuid
                 from sqlalchemy import text
                 
-                # Add the column
                 try:
-                    db.session.execute(text('ALTER TABLE users ADD COLUMN fs_uniquifier VARCHAR(255) UNIQUE'))
-                    db.session.commit()
-                    
-                    # Import User model after adding column
-                    from models import User
-                    
-                    # Populate existing users with unique identifiers
-                    users = User.query.all()
-                    for user in users:
-                        if not user.fs_uniquifier:
-                            user.fs_uniquifier = uuid.uuid4().hex
-                    
-                    db.session.commit()
+                    # Check if we're using SQLite
+                    if 'sqlite' in str(db.engine.url).lower():
+                        # For SQLite, recreate the table with the new column
+                        print("Performing SQLite migration for fs_uniquifier column...")
+                        
+                        # Import User model
+                        from models import User
+                        
+                        # Get all existing users
+                        existing_users = User.query.all()
+                        
+                        # Create a backup of existing data
+                        user_data = []
+                        for user in existing_users:
+                            user_data.append({
+                                'id': user.id,
+                                'username': user.username,
+                                'email': user.email,
+                                'password': user.password,
+                                'avatar': user.avatar,
+                                'status': user.status,
+                                'last_seen': user.last_seen,
+                                'created_at': user.created_at
+                            })
+                        
+                        # Drop the old table
+                        db.session.execute(text('DROP TABLE users'))
+                        db.session.commit()
+                        
+                        # Create the new table with the correct schema
+                        db.create_all()
+                        
+                        # Repopulate with existing data plus fs_uniquifier
+                        for data in user_data:
+                            user = User(
+                                id=data['id'],
+                                username=data['username'],
+                                email=data['email'],
+                                password=data['password'],
+                                avatar=data['avatar'],
+                                status=data['status'],
+                                last_seen=data['last_seen'],
+                                created_at=data['created_at'],
+                                fs_uniquifier=uuid.uuid4().hex
+                            )
+                            db.session.add(user)
+                        
+                        db.session.commit()
+                        print("SQLite migration completed successfully.")
+                    else:
+                        # For other databases, try the standard ALTER TABLE approach
+                        db.session.execute(text('ALTER TABLE users ADD COLUMN fs_uniquifier VARCHAR(255) UNIQUE'))
+                        db.session.commit()
+                        
+                        # Import User model after adding column
+                        from models import User
+                        
+                        # Populate existing users with unique identifiers
+                        users = User.query.all()
+                        for user in users:
+                            if not user.fs_uniquifier:
+                                user.fs_uniquifier = uuid.uuid4().hex
+                        
+                        db.session.commit()
                 except Exception as e:
                     # Handle case where column already exists or other issues
                     db.session.rollback()
