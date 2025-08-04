@@ -43,7 +43,43 @@ def create_app():
     
     # Create tables and default roles
     with app.app_context():
+        # Handle database migrations for existing databases
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        
+        # Check if users table exists
+        if 'users' in inspector.get_table_names():
+            # Check if fs_uniquifier column exists
+            columns = [column['name'] for column in inspector.get_columns('users')]
+            if 'fs_uniquifier' not in columns:
+                # Add fs_uniquifier column for existing databases
+                import uuid
+                from sqlalchemy import text
+                
+                # Add the column
+                try:
+                    db.session.execute(text('ALTER TABLE users ADD COLUMN fs_uniquifier VARCHAR(255) UNIQUE'))
+                    db.session.commit()
+                    
+                    # Import User model after adding column
+                    from models import User
+                    
+                    # Populate existing users with unique identifiers
+                    users = User.query.all()
+                    for user in users:
+                        if not user.fs_uniquifier:
+                            user.fs_uniquifier = uuid.uuid4().hex
+                    
+                    db.session.commit()
+                except Exception as e:
+                    # Handle case where column already exists or other issues
+                    db.session.rollback()
+                    print(f"Migration warning: {e}")
+        
         db.create_all()
+        
+        # Import models after db initialization to avoid circular imports
+        from models import User, Server, Channel, Message, DirectMessage, Friend, ServerMember, Role, VoiceParticipant
         
         # Create default roles if they don't exist
         if not user_datastore.find_role('admin'):
