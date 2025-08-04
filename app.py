@@ -528,9 +528,10 @@ def create_app():
     
     return app, socketio
 
+# Create application instance for gunicorn
+app, socketio = create_app()
+
 if __name__ == '__main__':
-    app, socketio = create_app()
-    
     # Get port from environment variable (for Render deployment) or default to 5000
     port = int(os.environ.get('PORT', 5000))
     

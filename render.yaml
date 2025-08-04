@@ -3,7 +3,7 @@ services:
     name: voxify
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 app:app
+    startCommand: gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 "app:create_app()"
     envVars:
       - key: SECRET_KEY
         sync: false
